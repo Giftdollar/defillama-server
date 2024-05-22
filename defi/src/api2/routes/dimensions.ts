@@ -10,6 +10,7 @@ import { errorResponse, successResponse } from "./utils";
 import { getAdapterTypeCache } from "../utils/dimensionsUtils";
 import { timeSToUnix, timeSToUnixString } from "../utils/time";
 import * as fs from 'fs'
+import axios from "axios";
 
 let lastCacheUpdate = new Date().getTime()
 const reqCache: any = {}
@@ -78,7 +79,7 @@ async function getOverviewProcess(eventParameters: any) {
 
   response.change_1d = getPercentage(summary.total24h, summary.total48hto24h)
   response.change_7d = getPercentage(summary.total24h, summary.total7DaysAgo)
-  response.change_30d = getPercentage(summary.total24h, summary.total30DaysAgo)
+  response.change_1m = getPercentage(summary.total24h, summary.total30DaysAgo)
   response.change_7dover7d = getPercentage(summary.total7d, summary.total14dto7d)
   response.change_30dover30d = getPercentage(summary.total30d, summary.total60dto30d)
 
@@ -95,7 +96,7 @@ async function getOverviewProcess(eventParameters: any) {
       protocolDataKeys.forEach(key => res[key] = summary[key])
 
 
-    protocolInfoKeys.forEach(key => res[key] = info[key])
+    protocolInfoKeys.forEach(key => res[key] = info?.[key])
     return res
   }).filter((i: any) => i)
 
@@ -167,7 +168,7 @@ async function getProtocolDataHandler(eventParameters: any) {
 
   if (!eventParameters.excludeTotalDataChartBreakdown) {
     const chartBreakdown = {} as any
-    let defaultLabel = misc.versionKey ? misc.versionKey : response.module 
+    let defaultLabel = misc.versionKey ? misc.versionKey : response.module
     Object.entries(records).forEach(([date, value]: any) => {
       let breakdown = value.breakdown?.[recordType]?.chains
       if (!breakdown) {
@@ -255,22 +256,73 @@ function getEventParameters(req: HyperExpress.Request, isSummary = true) {
 }
 
 async function run() {
-  const a = await getOverviewProcess({
-    adaptorType: AdapterType.AGGREGATOR_DERIVATIVES,
-    dataType: AdaptorRecordType.dailyVolume,
+  const overview = await getOverviewProcess({
+    adaptorType: AdapterType.OPTIONS,
+    dataType: AdaptorRecordType.dailyNotionalVolume,
     excludeTotalDataChart: false,
     excludeTotalDataChartBreakdown: false,
   }).catch(e => console.error(e))
-  const b = await getProtocolDataHandler({
-    adaptorType: AdapterType.AGGREGATOR_DERIVATIVES,
-    dataType: 'dv',
+  const overviewChain = await getOverviewProcess({
+    adaptorType: AdapterType.OPTIONS,
+    dataType: AdaptorRecordType.dailyNotionalVolume,
     excludeTotalDataChart: false,
     excludeTotalDataChartBreakdown: false,
-    protocolName: 'MUX Protocol'
+    chainFilter: 'arbitrum'
   }).catch(e => console.error(e))
+  const summary = await getProtocolDataHandler({
+    adaptorType: AdapterType.OPTIONS,
+    dataType: 'dpv',
+    excludeTotalDataChart: false,
+    excludeTotalDataChartBreakdown: false,
+    protocolName: 'Hegic'
+  }).catch(e => console.error(e))
+
   // console.log(a)
-  fs.writeFileSync('overview.json', JSON.stringify(a, null, 2))
-  fs.writeFileSync('summary.json', JSON.stringify(b, null, 2))
+  const origOverview = await axios.get('https://api.llama.fi/overview/options?dataType=dailyNotionalVolume').then(r => r.data)
+  const origChainOverview = await axios.get('https://api.llama.fi/overview/options/arbitrum?dataType=dailyNotionalVolume').then(r => r.data)
+  const origSummary = await axios.get('https://api.llama.fi/summary/options/Hegic?dataType=dailyPremiumVolume').then(r => r.data)
+
+
+  origSummary.totalDataChart = updateDataChart(origSummary.totalDataChart)
+  origSummary.totalDataChartBreakdown.forEach((i: any) => {
+    Object.values(i[1]).forEach((v: any) => Object.entries(v).forEach(([k, vv]: any) => v[k] = Math.round(vv)))
+  })
+  origOverview.totalDataChart = updateDataChart(origOverview.totalDataChart)
+  origOverview.totalDataChartBreakdown.forEach(updateBreakdown)
+  origChainOverview.totalDataChart = updateDataChart(origChainOverview.totalDataChart)
+  origChainOverview.totalDataChartBreakdown.forEach(updateBreakdown)
+
+  fs.writeFileSync('1overview.json', stringify(overview))
+  fs.writeFileSync('1overviewOrig.json', stringify(origOverview))
+  fs.writeFileSync('1summary.json', stringify(summary))
+  fs.writeFileSync('1summaryOrig.json', stringify(origSummary))
+  fs.writeFileSync('1overviewChain.json', stringify(overviewChain))
+  fs.writeFileSync('1overviewChainOrig.json', stringify(origChainOverview))
+
+  function stringify(i: any) {
+    i.totalDataChart = Object.fromEntries(i.totalDataChart)
+    i.totalDataChartBreakdown = Object.fromEntries(i.totalDataChartBreakdown)
+    return JSON.stringify(i, null, 2)
+  }
+
+  function updateBreakdown(i: any) {
+    i[0] = +i[0]
+    Object.entries(i[1]).forEach(([k, v]: any) => {
+      if (v > 0)
+        i[1][k] = Math.round(v)
+      else
+        delete i[1][k]
+    })
+  }
+
+  function updateDataChart(arry: any) {
+    arry.forEach((i: any) => {
+      i[1] = Math.round(i[1])
+      i[0] = +i[0]
+    })
+    return arry.filter((i: any) => i[1] > 0)
+  }
+
 }
 
-// run().then(_i => process.exit(0))
+run().then(_i => process.exit(0))

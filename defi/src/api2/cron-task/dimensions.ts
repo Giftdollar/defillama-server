@@ -25,8 +25,8 @@ const lastOneYearTimeStrings = new Set(Array.from({ length: 365 }, (_, i) => get
 async function run() {
 
   // Go over all types
-  const data = await getDimensionsCacheV2()
-  // const data: any = {}
+  // const data = await getDimensionsCacheV2()
+  const data: any = {}
 
   function roundVaules(obj: any) {
     if (!obj) return obj;
@@ -40,7 +40,7 @@ async function run() {
   }
 
   const promises: any = ADAPTER_TYPES.map(async (adapterType) => {
-    if (adapterType !== AdapterType.AGGREGATOR_DERIVATIVES) return;
+    if (adapterType !== AdapterType.OPTIONS) return;
 
     const timeKey1 = `data load ${adapterType}`
     const timeKey2 = `db call ${adapterType}`
@@ -213,27 +213,27 @@ async function run() {
         // change_1d
         protocolSummaryAction(protocolSummary, (summary: any) => {
           if (typeof summary.total24h === 'number' && typeof summary.total48hto24h === 'number' && summary.total48hto24h !== 0)
-            summary.change_1d = (summary.total24h - summary.total48hto24h) / summary.total48hto24h
+            summary.change_1d = getPercentage(summary.total24h, summary.total48hto24h)
         })
         // change_7d
         protocolSummaryAction(protocolSummary, (summary: any) => {
           if (typeof summary.total24h === 'number' && typeof summary.total7DaysAgo === 'number' && summary.total7DaysAgo !== 0)
-            summary.change_7d = (summary.total24h - summary.total7DaysAgo) / summary.total7DaysAgo
+            summary.change_7d = getPercentage(summary.total24h, summary.total7DaysAgo)
         })
-        // change_30d
+        // change_1m
         protocolSummaryAction(protocolSummary, (summary: any) => {
           if (typeof summary.total24h === 'number' && typeof summary.total30DaysAgo === 'number' && summary.total30DaysAgo !== 0)
-            summary.change_7d = (summary.total24h - summary.total30DaysAgo) / summary.total30DaysAgo
+            summary.change_1m = getPercentage(summary.total24h, summary.total30DaysAgo)
         })
         // change_7dover7d
         protocolSummaryAction(protocolSummary, (summary: any) => {
           if (typeof summary.total7d === 'number' && typeof summary.total14dto7d === 'number' && summary.total14dto7d !== 0)
-            summary.change_7dover7d = (summary.total7d - summary.total14dto7d) / summary.total14dto7d
+            summary.change_7dover7d = getPercentage(summary.total7d,  summary.total14dto7d)
         })
         // change_30dover30d
         protocolSummaryAction(protocolSummary, (summary: any) => {
           if (typeof summary.total30d === 'number' && typeof summary.total60dto30d === 'number' && summary.total60dto30d !== 0)
-            summary.change_30dover30d = (summary.total30d - summary.total60dto30d) / summary.total60dto30d
+            summary.change_30dover30d = getPercentage(summary.total30d, summary.total60dto30d)
         })
 
         // breakdown24h
@@ -366,8 +366,8 @@ type ProtocolSummary = RecordSummary & {
   breakdown24h?: any
 }
 
-// run().catch(console.error).then(() => process.exit(0))
-process.exit(0)
+run().catch(console.error).then(() => process.exit(0))
+// process.exit(0)
 
 // fill all missing data with the last available data
 function getProtocolRecordMapWithMissingData(records: IJSON<any>) {
@@ -440,3 +440,7 @@ function _getDisplayChainName(chain: string) {
   return chainNameCache[chain]
 }
 
+
+function getPercentage(a: number, b: number) {
+  return +Number(((a - b) / b) * 100).toFixed(2)
+}

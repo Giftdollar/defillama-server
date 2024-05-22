@@ -34,12 +34,13 @@ const getAdapterKey = (
 export default async (adapter: ProtocolAdaptor, adaptorRecordType: AdaptorRecordType, adaptorType: AdapterType, chainFilter?: string, onError?: (e: Error) => Promise<void>, {
     isApi2RestServer = false
 } = {}): Promise<ProtocolAdaptorSummary> => {
+    console.log(adapter, 'sdfsdf')
     const getAdaptorRecord = isApi2RestServer ? getAdaptorRecord2 : _getAdaptorRecord
     // console.info("Generating summary for:", adapter.name, "with params", adaptorRecordType, adaptorType, chainFilter)
     try {
         // Get all records from db
         const timestamp = getUniqStartOfTodayTimestamp(new Date()) - ONE_DAY_IN_SECONDS
-        let adaptorRecordsRaw = await getAdaptorRecord({ adaptorType, adapter, type: adaptorRecordType, mode: 'ALL', timestamp: timestamp })
+        let adaptorRecordsRaw = await getAdaptorRecord({ adaptorType, adapter, type: adaptorRecordType, mode: 'ALL', })
         const rawTotalRecord = ACCOMULATIVE_ADAPTOR_TYPE[adaptorRecordType]
             ? await getAdaptorRecord({ adaptorType, adapter, type: ACCOMULATIVE_ADAPTOR_TYPE[adaptorRecordType], mode: "LAST" }).catch(_e => { }) as AdaptorRecord | undefined
             : undefined

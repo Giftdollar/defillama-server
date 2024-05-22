@@ -78,6 +78,8 @@ export async function loadDimensionsCache() {
 }
 
 export async function getAdaptorRecord2({ adapter, type, mode = 'ALL', adaptorType }: GetAdaptorRecordOptions): Promise<AdaptorRecord[] | AdaptorRecord> {
+  console.log('heaw9r8o4rfwefsdgfdfglp')
+  throw new Error("Not implemented")/* 
   if (!cacheLoaded) throw new Error("Dimensions Cache not loaded")
   if (!adaptorType) throw new Error("adaptorType is required")
 
@@ -85,5 +87,5 @@ export async function getAdaptorRecord2({ adapter, type, mode = 'ALL', adaptorTy
   if (!cache.feesAdapterCache[fileKey]) throw new Error("Cache not found: " + fileKey)
 
   const cacheKey = getAdapterCacheKey(adapter, type, mode)
-  return cache.feesAdapterCache[fileKey][cacheKey]
+  return cache.feesAdapterCache[fileKey][cacheKey] */
 }
