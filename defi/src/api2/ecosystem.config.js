@@ -6,6 +6,7 @@ module.exports = {
       script: './src/api2/index.ts', // Path to your main TypeScript file
       interpreter: 'node',
       args: '-r ts-node/register', // Use ts-node for running TypeScript files
+      node_args: '--max-old-space-size=5120', // Set the maximum old space size to 5 GB
       listen_timeout: 120_000, // Wait 120 seconds for the app to start
       kill_timeout: 10_000, // Wait 10 seconds for the app to start
       wait_ready: true, // Wait for the 'ready' signal
