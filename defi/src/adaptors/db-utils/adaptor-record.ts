@@ -203,7 +203,6 @@ export const getAdaptorRecord = async (adaptorId: string, type: AdaptorRecordTyp
     // Creating dummy object to get the correct key
     const adaptorRecord = new AdaptorRecord(type, adaptorId, null!, null!, protocolType)
     let keyConditionExpression = "PK = :pk"
-    console.log("getAdaptorRecord2", adaptorRecord.pk, type, timestamp, mode, lastKey)
     const expressionAttributeValues: { [key: string]: any } = {
         ":pk": adaptorRecord.pk,
     }

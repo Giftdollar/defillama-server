@@ -25,8 +25,8 @@ const lastOneYearTimeStrings = new Set(Array.from({ length: 365 }, (_, i) => get
 async function run() {
 
   // Go over all types
-  // const data = await getDimensionsCacheV2()
-  const data: any = {}
+  const data = await getDimensionsCacheV2()
+  // const data: any = {}
 
   function roundVaules(obj: any) {
     if (!obj) return obj;
@@ -40,7 +40,7 @@ async function run() {
   }
 
   const promises: any = ADAPTER_TYPES.map(async (adapterType) => {
-    if (adapterType !== AdapterType.OPTIONS) return;
+    // if (adapterType !== AdapterType.OPTIONS) return;
 
     const timeKey1 = `data load ${adapterType}`
     const timeKey2 = `db call ${adapterType}`

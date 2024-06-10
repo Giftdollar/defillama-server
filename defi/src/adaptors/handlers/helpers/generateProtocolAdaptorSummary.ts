@@ -34,7 +34,6 @@ const getAdapterKey = (
 export default async (adapter: ProtocolAdaptor, adaptorRecordType: AdaptorRecordType, adaptorType: AdapterType, chainFilter?: string, onError?: (e: Error) => Promise<void>, {
     isApi2RestServer = false
 } = {}): Promise<ProtocolAdaptorSummary> => {
-    console.log(adapter, 'sdfsdf')
     const getAdaptorRecord = isApi2RestServer ? getAdaptorRecord2 : _getAdaptorRecord
     // console.info("Generating summary for:", adapter.name, "with params", adaptorRecordType, adaptorType, chainFilter)
     try {
