@@ -11,7 +11,8 @@ git submodule update --remote --merge
 
 npm i
 
-npm run prebuild
+IS_API2_SERVER=true  npm run prebuild
+SKIP_CAHE_WRITE_R2=true npm run cache-config
 npm run api2-cron-task
 npm run cron-dimensions
 
